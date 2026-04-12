@@ -216,6 +216,22 @@ ORDER BY indicator_code;
 
 ---
 
+## Sample Output
+
+**Row counts after full backfill**
+![Row counts](assets/screenshot_row_counts.png)
+
+**All tracked assets across 3 asset classes**
+![Assets](assets/screenshot_prices.png)
+
+**RSI signals and moving averages — latest date across all tickers**
+![Indicators](assets/screenshot_indicators.png)
+
+**Latest macro indicator values from FRED**
+![Macro](assets/screenshot_macro.png)
+
+---
+
 ## Design Decisions
 
 **Why upserts?** Plain `INSERT` fails on re-runs. `ON CONFLICT DO UPDATE` makes the pipeline idempotent — safe to run multiple times with the same result.
