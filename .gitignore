@@ -20,6 +20,10 @@ env/
 # Personal notes
 Instructions to Enzo.md
 
+# Airflow
+logs/
+plugins/
+
 # Jupyter
 .ipynb_checkpoints/
 

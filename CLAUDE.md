@@ -2,8 +2,17 @@
 
 ## Project
 Financial Markets ETL Pipeline. Full plan is in `PROJECT_PLAN.md`.
+Airflow integration plan is in `AIRFLOW_SETUP.md`.
 
-## Status: ALL STEPS COMPLETE
+## Development Environment
+- **Primary development now happens on GitHub Codespaces** (VS Code in browser)
+- Local Windows machine had Docker/WSL issues — may be revisited later
+- PostgreSQL database (`financial_etl`) runs on local Windows machine
+- Codespaces cannot reach the local DB — Docker/Airflow testing requires either:
+  - Fixing WSL/Docker Desktop locally, OR
+  - Setting up a PostgreSQL instance inside Codespaces
+
+## Base Pipeline — ALL STEPS COMPLETE
 
 | Step | Task | Status |
 |---|---|---|
@@ -16,32 +25,26 @@ Financial Markets ETL Pipeline. Full plan is in `PROJECT_PLAN.md`.
 | 7 | `tests/test_extract.py`, `tests/test_transform.py` | Done — 29/29 passing |
 | 8 | `README.md` | Done |
 
+## Airflow Integration — IN PROGRESS
+
+| Step | Task | Status |
+|---|---|---|
+| 1 | Feature branch `feat/airflow-dag` | Done |
+| 2 | `Dockerfile` + `requirements-airflow.txt` | Done |
+| 3 | `docker-compose.yaml` (LocalExecutor, host DB via host.docker.internal) | Done |
+| 4 | `dags/financial_etl_dag.py` (5 tasks, XCom, weekday schedule) | Done |
+| 5 | `.gitignore` updated for `logs/`, `plugins/` | Done |
+| 6 | PostgreSQL `pg_hba.conf` + `postgresql.conf` updated for Docker access | Done (local) |
+| 7 | Test: `docker compose up`, verify DAG in UI, trigger manual run | **Not started** |
+| 8 | Update README with Airflow instructions | Not started |
+| 9 | Commit and push all Airflow files | Not started |
+
 ## Known Bugs Fixed
-- `numpy.int64` → psycopg2 crash: fixed in `load.py:_nan_to_none()` by calling `.item()` on numpy scalars to convert to native Python types.
+- `numpy.int64` → psycopg2 crash: fixed in `load.py:_nan_to_none()` by calling `.item()` on numpy scalars.
 
-## Pipeline Verified Working
-- Ran `python -m src.pipeline --mode backfill --tickers AAPL` successfully
-- 501 rows loaded into `daily_prices` and `technical_indicators`
-- All 5 FRED macro series loaded into `macro_indicators`
-
-## How to Run
-```bash
-# Full backfill
-python -m src.pipeline --mode backfill
-
-# Single ticker test
-python -m src.pipeline --mode backfill --tickers AAPL
-
-# Tests
-python -m pytest tests/ -v
-```
-
-## Possible Next Steps
-- Schedule daily runs with Windows Task Scheduler
-- Add `notebooks/exploration.ipynb` for EDA and charts
-- Add more tickers to `TICKER_UNIVERSE` in `config/settings.py`
-- Build a Streamlit dashboard to visualize the data
+## Git State
+- Branch `master`: base pipeline + screenshots (pushed to GitHub)
+- Branch `feat/airflow-dag`: all Airflow files created locally, NOT yet committed or pushed
 
 ## Security
 - `.env` is gitignored and blocked from Claude via PreToolUse hook in `.claude/settings.json`
-- Hook fires on every session — no restart needed after the first one
