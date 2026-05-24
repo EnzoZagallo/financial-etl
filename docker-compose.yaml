@@ -8,6 +8,7 @@ x-airflow-common: &airflow-common
     AIRFLOW__CORE__LOAD_EXAMPLES: 'false'
     AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:airflow@airflow-postgres:5432/airflow
     AIRFLOW__WEBSERVER__SECRET_KEY: change_me_in_production
+    AIRFLOW__LOGGING__COLORED_CONSOLE_LOG: 'false'
     # Project source code available via PYTHONPATH
     PYTHONPATH: /opt/airflow/project
     # Credentials for the financial_etl DB (Docker container or host machine)
