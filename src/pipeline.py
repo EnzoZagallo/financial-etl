@@ -17,6 +17,7 @@ from config.settings import (
     TICKER_UNIVERSE,
     FRED_SERIES,
     LOOKBACK_DAYS,
+    ASSET_METADATA,
 )
 from src.extract import extract_prices, extract_macro
 from src.transform import clean_prices, calculate_indicators
@@ -37,19 +38,6 @@ logging.basicConfig(
     handlers=[logging.StreamHandler(sys.stdout)],
 )
 logger = logging.getLogger(__name__)
-
-
-# ── Asset metadata ─────────────────────────────────────────────────────────────
-# Extend this dict when you add new tickers to TICKER_UNIVERSE.
-
-ASSET_METADATA = {
-    "AAPL":     {"name": "Apple Inc.",          "asset_type": "stock",     "sector": "Technology",  "currency": "USD"},
-    "MSFT":     {"name": "Microsoft Corp.",      "asset_type": "stock",     "sector": "Technology",  "currency": "USD"},
-    "^GSPC":    {"name": "S&P 500",              "asset_type": "index",     "sector": None,          "currency": "USD"},
-    "^VIX":     {"name": "CBOE Volatility Index","asset_type": "index",     "sector": None,          "currency": "USD"},
-    "GC=F":     {"name": "Gold Futures",         "asset_type": "commodity", "sector": None,          "currency": "USD"},
-    "EURUSD=X": {"name": "EUR/USD",              "asset_type": "fx",        "sector": None,          "currency": "USD"},
-}
 
 
 # ── Date helpers ───────────────────────────────────────────────────────────────
