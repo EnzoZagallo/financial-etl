@@ -4,6 +4,8 @@ x-airflow-common: &airflow-common
     dockerfile: Dockerfile
   environment: &airflow-common-env
     AIRFLOW__CORE__EXECUTOR: LocalExecutor
+    # Empty for local dev — generate a real key for production:
+    # python -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())"
     AIRFLOW__CORE__FERNET_KEY: ''
     AIRFLOW__CORE__LOAD_EXAMPLES: 'false'
     AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:airflow@airflow-postgres:5432/airflow
