@@ -1,6 +1,6 @@
 # Financial Markets ETL Pipeline
 
-A portfolio project demonstrating data engineering skills applied to financial market data. Extracts price and macroeconomic data from public APIs, computes technical indicators, and loads everything into a local PostgreSQL database.
+A portfolio project demonstrating data engineering skills applied to financial market data. Extracts price and macroeconomic data from public APIs, computes technical indicators, and loads everything into a PostgreSQL database. Orchestrated with Apache Airflow via Docker Compose.
 
 ---
 
@@ -30,10 +30,11 @@ A portfolio project demonstrating data engineering skills applied to financial m
 
 | Layer | Tool |
 |---|---|
+| Orchestration | Apache Airflow (Docker Compose) |
 | Extraction | `yfinance`, `fredapi` |
 | Transformation | `pandas`, `numpy` |
 | Loading | `psycopg2` |
-| Database | PostgreSQL (local) |
+| Database | PostgreSQL |
 | Testing | `pytest`, `unittest.mock` |
 
 ---
@@ -151,6 +152,46 @@ python -m src.pipeline --mode backfill --skip-macro
 
 ---
 
+## Running with Airflow (Docker)
+
+The pipeline is also orchestrated as an Airflow DAG with Docker Compose.
+
+### Start Airflow
+
+```bash
+# Create .env with your credentials (see Environment Variables section above)
+docker compose up airflow-init
+docker compose up -d
+```
+
+### Access the Airflow UI
+
+Open [http://localhost:8080](http://localhost:8080) — login: `airflow` / `airflow`
+
+### Trigger a run
+
+1. Find `financial_etl_daily` in the DAGs list
+2. Toggle the switch to unpause
+3. Click the play button to trigger manually
+
+### DAG task graph
+
+```
+extract_prices  →  transform_prices  →  load_prices
+extract_macro   →  load_macro
+```
+
+Schedule: weekdays at 07:00 CET (`0 5 * * 1-5` UTC)
+
+### Stop Airflow
+
+```bash
+docker compose down      # stop containers
+docker compose down -v   # stop and delete all data
+```
+
+---
+
 ## Running Tests
 
 ```bash
@@ -229,6 +270,12 @@ ORDER BY indicator_code;
 
 **Latest macro indicator values from FRED**
 ![Macro](assets/screenshot_macro.png)
+
+**Airflow DAG — overview with successful runs**
+![DAG overview](assets/screenshot_dag_overview.png)
+
+**Airflow DAG — run history (manual + scheduled)**
+![DAG runs](assets/screenshot_dag_runs.png)
 
 ---
 
