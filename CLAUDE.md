@@ -5,14 +5,12 @@ Financial Markets ETL Pipeline. Full plan is in `PROJECT_PLAN.md`.
 Airflow integration plan is in `AIRFLOW_SETUP.md`.
 
 ## Development Environment
-- **Primary development now happens on GitHub Codespaces** (VS Code in browser)
+- **Primary development happens on GitHub Codespaces** (VS Code in browser)
 - Local Windows machine had Docker/WSL issues — may be revisited later
-- PostgreSQL database (`financial_etl`) runs on local Windows machine
-- Codespaces cannot reach the local DB — Docker/Airflow testing requires either:
-  - Fixing WSL/Docker Desktop locally, OR
-  - Setting up a PostgreSQL instance inside Codespaces
+- PostgreSQL database for CLI mode runs on local Windows machine
+- Airflow mode runs everything inside Docker (including PostgreSQL)
 
-## Base Pipeline — ALL STEPS COMPLETE
+## Base Pipeline — COMPLETE
 
 | Step | Task | Status |
 |---|---|---|
@@ -25,26 +23,28 @@ Airflow integration plan is in `AIRFLOW_SETUP.md`.
 | 7 | `tests/test_extract.py`, `tests/test_transform.py` | Done — 29/29 passing |
 | 8 | `README.md` | Done |
 
-## Airflow Integration — IN PROGRESS
+## Airflow Integration — COMPLETE
 
 | Step | Task | Status |
 |---|---|---|
 | 1 | Feature branch `feat/airflow-dag` | Done |
 | 2 | `Dockerfile` + `requirements-airflow.txt` | Done |
-| 3 | `docker-compose.yaml` (LocalExecutor, host DB via host.docker.internal) | Done |
-| 4 | `dags/financial_etl_dag.py` (5 tasks, XCom, weekday schedule) | Done |
+| 3 | `docker-compose.yaml` (LocalExecutor, self-contained PostgreSQL) | Done |
+| 4 | `dags/financial_etl_dag.py` — 5 tasks, XCom, Params, error handling | Done |
 | 5 | `.gitignore` updated for `logs/`, `plugins/` | Done |
-| 6 | PostgreSQL `pg_hba.conf` + `postgresql.conf` updated for Docker access | Done (local) |
-| 7 | Test: `docker compose up`, verify DAG in UI, trigger manual run | **Not started** |
-| 8 | Update README with Airflow instructions | Not started |
-| 9 | Commit and push all Airflow files | Not started |
+| 6 | Tested in GitHub Codespaces — DAG runs successfully | Done |
+| 7 | README updated with Airflow instructions + screenshots | Done |
+| 8 | All Airflow files committed and pushed | Done |
 
 ## Known Bugs Fixed
 - `numpy.int64` → psycopg2 crash: fixed in `load.py:_nan_to_none()` by calling `.item()` on numpy scalars.
+- Airflow 2.10.5 logging handler crash: downgraded to 2.9.3.
+- Docker logs/ permission error: fixed with `chmod -R 777 logs/`.
 
 ## Git State
-- Branch `master`: base pipeline + screenshots (pushed to GitHub)
-- Branch `feat/airflow-dag`: all Airflow files created locally, NOT yet committed or pushed
+- Branch `master`: base pipeline + pgAdmin screenshots
+- Branch `feat/airflow-dag`: Airflow DAG, Docker Compose, updated README + DAG screenshots
 
 ## Security
 - `.env` is gitignored and blocked from Claude via PreToolUse hook in `.claude/settings.json`
+- Fernet key is empty for local dev — comment in docker-compose.yaml explains how to generate for production
