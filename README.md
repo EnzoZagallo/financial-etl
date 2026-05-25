@@ -6,22 +6,32 @@ A portfolio project demonstrating data engineering skills applied to financial m
 
 ## Architecture
 
+The pipeline can run in two modes:
+
+**CLI mode** — run manually with `python -m src.pipeline`, connects to a local PostgreSQL instance.
+
+**Airflow mode** — orchestrated via Docker Compose. All services (Airflow + PostgreSQL) run inside containers — no local database setup needed.
+
 ```
-┌─────────────┐     ┌──────────────────┐     ┌──────────────┐
-│   EXTRACT   │     │    TRANSFORM     │     │     LOAD     │
-│             │     │                  │     │              │
-│  yfinance   │────▶│  Clean nulls     │────▶│  Upsert to   │
-│  FRED API   │     │  Calc returns    │     │  PostgreSQL  │
-│             │     │  Technical ind.  │     │  (localhost) │
-└─────────────┘     └──────────────────┘     └──────────────┘
-       │                     │                       │
-   extract.py          transform.py             load.py
-                                                     │
-                                              ┌──────┴───────┐
-                                              │  PostgreSQL   │
-                                              │  financial_etl│
-                                              │  (local disk) │
-                                              └──────────────┘
+┌──────────────────────────────────────────────────────────────────────┐
+│                        Docker Compose                                │
+│                                                                      │
+│  ┌─────────────┐   ┌──────────────────┐   ┌──────────────────────┐  │
+│  │   EXTRACT   │   │    TRANSFORM     │   │        LOAD          │  │
+│  │             │   │                  │   │                      │  │
+│  │  yfinance   │──▶│  Clean nulls     │──▶│  Upsert to           │  │
+│  │  FRED API   │   │  Calc returns    │   │  PostgreSQL          │  │
+│  │             │   │  Technical ind.  │   │  (Docker container)  │  │
+│  └─────────────┘   └──────────────────┘   └──────────┬───────────┘  │
+│        │                    │                         │              │
+│    extract.py         transform.py               load.py            │
+│                                                      │              │
+│  ┌────────────────────┐                ┌─────────────┴────────────┐ │
+│  │  Airflow Scheduler │                │  PostgreSQL (financial_  │ │
+│  │  + Webserver (UI)  │                │  etl) — port 5433        │ │
+│  │  port 8080         │                └──────────────────────────┘ │
+│  └────────────────────┘                                             │
+└──────────────────────────────────────────────────────────────────────┘
 ```
 
 ---
@@ -101,25 +111,24 @@ financial-etl/
 
 ## Setup
 
-### 1. PostgreSQL
+There are two ways to run this project:
 
-Make sure PostgreSQL is running locally, then:
+### Option A — CLI mode (local PostgreSQL)
 
+For running the pipeline manually with `python -m src.pipeline`.
+
+**1. PostgreSQL** — install and create the database:
 ```bash
 psql -U postgres -c "CREATE DATABASE financial_etl;"
 psql -U postgres -d financial_etl -f sql/schema.sql
 ```
 
-### 2. Python dependencies
-
+**2. Python dependencies:**
 ```bash
 pip install yfinance fredapi pandas psycopg2-binary python-dotenv pytest
 ```
 
-### 3. Environment variables
-
-Create a `.env` file in the project root:
-
+**3. Environment variables** — create a `.env` file in the project root:
 ```
 DB_HOST=localhost
 DB_PORT=5432
@@ -129,6 +138,20 @@ DB_PASSWORD=your_password
 
 FRED_API_KEY=your_fred_api_key
 ```
+
+### Option B — Airflow mode (Docker, no local PostgreSQL needed)
+
+For running the pipeline on a schedule with the Airflow UI. Docker Compose handles everything — PostgreSQL runs inside a container.
+
+**1. Install Docker Desktop** (or use GitHub Codespaces, which has Docker built in).
+
+**2. Environment variables** — create a `.env` file:
+```
+DB_PASSWORD=postgres
+FRED_API_KEY=your_fred_api_key
+```
+
+**3. Start Airflow** — see the "Running with Airflow" section below.
 
 Get a free FRED API key at [fred.stlouisfed.org](https://fred.stlouisfed.org/docs/api/api_key.html).
 
