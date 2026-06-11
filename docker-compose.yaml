@@ -1,0 +1,116 @@
+x-airflow-common: &airflow-common
+  build:
+    context: .
+    dockerfile: Dockerfile
+  environment: &airflow-common-env
+    AIRFLOW__CORE__EXECUTOR: LocalExecutor
+    # Empty for local dev — generate a real key for production:
+    # python -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())"
+    AIRFLOW__CORE__FERNET_KEY: ''
+    AIRFLOW__CORE__LOAD_EXAMPLES: 'false'
+    AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:airflow@airflow-postgres:5432/airflow
+    AIRFLOW__WEBSERVER__SECRET_KEY: change_me_in_production
+    AIRFLOW__LOGGING__COLORED_CONSOLE_LOG: 'false'
+    # Project source code available via PYTHONPATH
+    PYTHONPATH: /opt/airflow/project
+    # Credentials for the financial_etl DB (Docker container or host machine)
+    DB_HOST: financial-etl-postgres
+    DB_PORT: "5432"
+    DB_NAME: financial_etl
+    DB_USER: postgres
+    DB_PASSWORD: ${DB_PASSWORD:-postgres}
+    FRED_API_KEY: ${FRED_API_KEY:-}
+  volumes:
+    - ./dags:/opt/airflow/dags
+    - ./logs:/opt/airflow/logs
+    - ./plugins:/opt/airflow/plugins
+    # Mount the project so DAG can import src/ and config/
+    - .:/opt/airflow/project
+  extra_hosts:
+    # Fallback: allows containers to reach host machine's PostgreSQL if needed
+    - "host.docker.internal:host-gateway"
+  depends_on:
+    airflow-postgres:
+      condition: service_healthy
+    financial-etl-postgres:
+      condition: service_healthy
+
+services:
+  # ── Financial ETL database (your actual data) ─────────────────
+  financial-etl-postgres:
+    image: postgres:15
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-postgres}
+      POSTGRES_DB: financial_etl
+    ports:
+      - "5433:5432"   # Exposed on 5433 to avoid conflict with local PostgreSQL
+    volumes:
+      - financial-etl-pg-data:/var/lib/postgresql/data
+      - ./sql/schema.sql:/docker-entrypoint-initdb.d/schema.sql  # Auto-creates tables on first run
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d financial_etl"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ── Airflow metadata database (internal, not your data) ───────
+  airflow-postgres:
+    image: postgres:15
+    environment:
+      POSTGRES_USER: airflow
+      POSTGRES_PASSWORD: airflow
+      POSTGRES_DB: airflow
+    volumes:
+      - airflow-pg-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U airflow"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ── One-time init: creates Airflow tables + admin user ────────
+  airflow-init:
+    <<: *airflow-common
+    entrypoint: /bin/bash
+    command:
+      - -c
+      - |
+        airflow db migrate &&
+        airflow users create \
+          --username airflow \
+          --password airflow \
+          --firstname Airflow \
+          --lastname Admin \
+          --role Admin \
+          --email admin@example.com || true
+    depends_on:
+      airflow-postgres:
+        condition: service_healthy
+      financial-etl-postgres:
+        condition: service_healthy
+
+  airflow-webserver:
+    <<: *airflow-common
+    command: airflow webserver --port 8080
+    ports:
+      - "8080:8080"
+    healthcheck:
+      test: ["CMD", "curl", "--fail", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+    depends_on:
+      airflow-init:
+        condition: service_completed_successfully
+
+  airflow-scheduler:
+    <<: *airflow-common
+    command: airflow scheduler
+    depends_on:
+      airflow-init:
+        condition: service_completed_successfully
+
+volumes:
+  financial-etl-pg-data:
+  airflow-pg-data:

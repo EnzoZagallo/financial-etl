@@ -36,5 +36,15 @@ FRED_SERIES = {
     "T10Y2Y":   "10Y-2Y Treasury Spread",
 }
 
+# ── Asset metadata ────────────────────────────────────────────
+ASSET_METADATA = {
+    "AAPL":     {"name": "Apple Inc.",           "asset_type": "stock",     "sector": "Technology",  "currency": "USD"},
+    "MSFT":     {"name": "Microsoft Corp.",      "asset_type": "stock",     "sector": "Technology",  "currency": "USD"},
+    "^GSPC":    {"name": "S&P 500",              "asset_type": "index",     "sector": None,          "currency": "USD"},
+    "^VIX":     {"name": "CBOE Volatility Index","asset_type": "index",     "sector": None,          "currency": "USD"},
+    "GC=F":     {"name": "Gold Futures",         "asset_type": "commodity", "sector": None,          "currency": "USD"},
+    "EURUSD=X": {"name": "EUR/USD",              "asset_type": "fx",        "sector": None,          "currency": "USD"},
+}
+
 # ── Pipeline defaults ─────────────────────────────────────────
 LOOKBACK_DAYS = 730  # 2 years of historical data
