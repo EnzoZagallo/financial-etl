@@ -17,9 +17,6 @@ env/
 # Claude Code
 .claude/
 
-# Personal notes
-Instructions to Enzo.md
-
 # Airflow
 logs/
 plugins/
