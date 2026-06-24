@@ -1,8 +1,8 @@
 # Claude Code — Session Context
 
 ## Project
-Financial Markets ETL Pipeline. Full plan is in `PROJECT_PLAN.md`.
-Airflow integration plan is in `AIRFLOW_SETUP.md`.
+Financial Markets ETL Pipeline.
+Live planning doc: `PRODUCTION_READINESS_PLAN.md`. Pre-Phase-3 review: `REVIEW_FINDINGS.md`.
 
 ## Development Environment
 - **Primary development happens on GitHub Codespaces** (VS Code in browser)
